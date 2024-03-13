@@ -157,7 +157,7 @@
 	const config_file_name='/building.json';
 	const styles_file_name='/styles.json'
 	const materials_folder='/materials';
-	const hallspics_prefix= '/virtual-gallary';
+	const hallspics_prefix= '/';
 	
 	const aux_javascript= 'room_builder_aux.js';
 	// -------------------------------------------------------
@@ -224,7 +224,7 @@
 			BABYLON.SceneLoader.LoadAssetContainer(asset_location, file, scene, function (container) {
 				document.getElementById("loader").style.display = "none";
 				document.getElementById("loader").id= "loaded";
-				setTimeout(()=>{document.getElementById("loaded").style.display = "none";}, 1000);
+				setTimeout(()=>{document.getElementById("loaded").style.display = "none";}, 7000);
 				if (container.cameras){
 					container.cameras.pop();
 				}
