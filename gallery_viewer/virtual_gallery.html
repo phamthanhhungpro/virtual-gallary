@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>LB Artworks</title>
+    <title>My Artworks</title>
 
     <style>
 		html,
@@ -154,10 +154,10 @@
     <script>
     // user custom variables that you need to modify
 	const asset_location='/';
-	const config_file_name='/ccc/building.json';
-	const styles_file_name='/ccc/styles.json'
-	const materials_folder='/ccc/materials';
-	const hallspics_prefix= '/ccc';
+	const config_file_name='/virtual-gallary/building.json';
+	const styles_file_name='/virtual-gallary/styles.json'
+	const materials_folder='/virtual-gallary/materials';
+	const hallspics_prefix= '/virtual-gallary';
 	
 	const aux_javascript= 'room_builder_aux.js';
 	// -------------------------------------------------------
@@ -200,11 +200,11 @@
 
 	if (('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || (navigator.msMaxTouchPoints > 0)) {
 	  isTouchDevice = true;
-	      document.getElementById('image1').src = "/ccc/icons/touch_move.png";
-			document.getElementById('image2').src = "/ccc/icons/touch_pan.png";
+	      document.getElementById('image1').src = "/virtual-gallary/icons/touch_move.png";
+			document.getElementById('image2').src = "/virtual-gallary/icons/touch_pan.png";
 	} else {
-	    document.getElementById('image1').src = "/ccc/icons/keyboard_move.png";
-		document.getElementById('image2').src = "/ccc/icons/keyboard_pan.png";
+	    document.getElementById('image1').src = "/virtual-gallary/icons/keyboard_move.png";
+		document.getElementById('image2').src = "/virtual-gallary/icons/keyboard_pan.png";
 	}
 	
 
@@ -224,7 +224,7 @@
 			BABYLON.SceneLoader.LoadAssetContainer(asset_location, file, scene, function (container) {
 				document.getElementById("loader").style.display = "none";
 				document.getElementById("loader").id= "loaded";
-				setTimeout(()=>{document.getElementById("loaded").style.display = "none";}, 1000);
+				setTimeout(()=>{document.getElementById("loaded").style.display = "none";}, 7000);
 				if (container.cameras){
 					container.cameras.pop();
 				}
