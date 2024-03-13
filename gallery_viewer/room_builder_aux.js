@@ -134,7 +134,6 @@ var item_builder = function (name, item_position, item_size, vector, material, s
 		let setOfStrings = ["wall_n", "wall_s", "wall_e", "wall_w", "floor", "ceiling", "Cube"];
 
 		if (!setOfStrings.includes(name)) {
-			console.log('create item', name);
 			// Create the box at the position of the base vector with the plane's rotation
 			let item2 = BABYLON.MeshBuilder.CreateBox("box" + name, {
 				size: 1,
@@ -277,13 +276,11 @@ function rb(config_file, room_name, scene) {
 
 	//wall material
 	var concrete = wall_material;
-	console.log('wall_material', wall_material);
 	//door material
 	var root_doorMaterial = door_material;
 
 
 	const dict_items = Object.keys(config_file[room_name]);
-	console.log('dict_items', dict_items);
 
 	//the root gallery has some differences with any other gallery
 	//k =0 and 1 are the geometry and parent.
