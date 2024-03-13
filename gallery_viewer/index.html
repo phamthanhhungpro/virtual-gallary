@@ -154,9 +154,9 @@
     <script>
     // user custom variables that you need to modify
 	const asset_location='/';
-	const config_file_name='/virtual-gallary/building.json';
-	const styles_file_name='/virtual-gallary/styles.json'
-	const materials_folder='/virtual-gallary/materials';
+	const config_file_name='/building.json';
+	const styles_file_name='/styles.json'
+	const materials_folder='/materials';
 	const hallspics_prefix= '/virtual-gallary';
 	
 	const aux_javascript= 'room_builder_aux.js';
@@ -200,11 +200,11 @@
 
 	if (('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || (navigator.msMaxTouchPoints > 0)) {
 	  isTouchDevice = true;
-	      document.getElementById('image1').src = "/ccc/icons/touch_move.png";
-			document.getElementById('image2').src = "/ccc/icons/touch_pan.png";
+	      document.getElementById('image1').src = "/icons/touch_move.png";
+			document.getElementById('image2').src = "/icons/touch_pan.png";
 	} else {
-	    document.getElementById('image1').src = "/ccc/icons/keyboard_move.png";
-		document.getElementById('image2').src = "/ccc/icons/keyboard_pan.png";
+	    document.getElementById('image1').src = "/icons/keyboard_move.png";
+		document.getElementById('image2').src = "/icons/keyboard_pan.png";
 	}
 	
 
