@@ -82,61 +82,13 @@ async function read_styles(filename) {
 		});
 
 }
-var item_builder1 = function (name, item_position, item_size, vector, material, scene) {
-	//places artwork as an image texture
-	//adds a frame and both elements have a customizable separation from the wall
-	//the thickness of the frame is half the separation
-
-	var base_vector = new BABYLON.Vector3(0, 0, 0);
-	const north_vector = new BABYLON.Vector3(0, 0, 1);
-	var abstractPlane = BABYLON.Plane.FromPositionAndNormal(base_vector, vector);
-	var item = BABYLON.MeshBuilder.CreatePlane(name, { sourcePlane: abstractPlane, width: item_size.width, height: item_size.height, sideOrientation: BABYLON.Mesh.SINGLESIDE }, scene);
-
-	//the position is shifted away from the wall in the direction of the item vector (normal)
-	item.position = new BABYLON.Vector3(item_position.x, item_position.y, item_position.z).add(vector.scale(3 * item_separation / 2));
-	item.checkCollisions = true;
-	if (material != undefined) {
-		item.material = material;
-		item.material.specularColor = new BABYLON.Color3(0, 0, 0);
-
-	}
-
-
-
-	// Create the box at the position of the base vector with the plane's rotation
-	let item2 = BABYLON.MeshBuilder.CreateBox("box" + name, {
-		size: 1,
-		updatable: true
-	}, scene);
-
-	// Set the position, rotation and scale of the box/frame
-	item2.position = new BABYLON.Vector3(item_position.x, item_position.y, item_position.z).add(vector.scale(item_separation / 2 - 0.001));
-	item2.rotate(BABYLON.Axis.Y, Math.acos(BABYLON.Vector3.Dot(vector, north_vector)), BABYLON.Space.LOCAL);
-	item2.scaling = new BABYLON.Vector3(item_size.width + margin, item_size.height + margin, item_separation);
-
-
-	//check if the mesh that merges all the frames is already created
-	let existing_frame_object = scene.getMeshByName('frames');
-	if (existing_frame_object) {
-		var merged_mesh = BABYLON.Mesh.MergeMeshes([existing_frame_object, item2], true);
-		merged_mesh.name = "frames";
-	} else {
-		item2.name = "frames";
-	}
-
-
-
-
-
-	return item
-}
 
 var item_builder = function (name, item_position, item_size, vector, material, scene) {
 	//every "item" is based on a plane as a base object
 	//some objects have additional elements:
 	// - doors (name start with d_) will have a 3D text in additional
 	// - non architectural elements (artwork) will have a white frameElement
-
+	
 	var base_vector = new BABYLON.Vector3(0, 0, 0);
 	const north_vector = new BABYLON.Vector3(0, 0, 1);
 	var abstractPlane = BABYLON.Plane.FromPositionAndNormal(base_vector, vector);
@@ -159,27 +111,53 @@ var item_builder = function (name, item_position, item_size, vector, material, s
 		} else {
 			texto = name.replace(/d_(.+)_\d+/, "$1");;
 		}
+
 		myText = BABYLON.MeshBuilder.CreateText("T_" + texto, texto, fontContent, {
 			size: 0.2,
 			resolution: 5,
 			depth: 0.3,
 			sideOrientation: 2
 		}, scene);
+		//scale it
+		var maxLength = 1.5; // Maximum length of the text in the scene
+		scene.executeWhenReady(function () {
+			// Assuming the text is aligned along the X axis, measure its length
+			myText.refreshBoundingInfo();
+			var boundingInfo = myText.getBoundingInfo();
+			var textWidth = boundingInfo.maximum.x - boundingInfo.minimum.x;
 
+			// Check if the text exceeds the maximum length
+			if (textWidth > maxLength) {
+				// Calculate the required scaling factor
+				var scaleFactor = maxLength / textWidth;
+
+				// Apply the scaling factor to the text mesh
+				myText.scaling.x = scaleFactor;
+				myText.scaling.y = scaleFactor; // Optional: Scale uniformly in Y to maintain aspect ratio
+				// Note: Adjust Z scaling as needed, or leave it if uniform scaling is desired
+			}
+		});
 		//place it
-		myText.position = new BABYLON.Vector3(item_position.x, item_position.y, item_position.z);
+		myText.position = new BABYLON.Vector3(item_position.x, item_position.y, item_position.z).add(vector.scale(3 * item_separation / 3));;
 
 		//rotate
 		var crossProduct = BABYLON.Vector3.Cross(north_vector, vector);
-		let angle = Math.acos(BABYLON.Vector3.Dot(north_vector, vector)) * Math.sign(crossProduct.y);;
+		// Calculate the dot product and use it to find the angle between vectors
+		let dotProduct = BABYLON.Vector3.Dot(north_vector, vector);
+		let angle = Math.acos(dotProduct);
+
+		// Adjust the angle based on the direction of the cross product
+		if (crossProduct.y < 0) {
+			angle = -angle;
+		}
+		angle += Math.PI;
 		myText.rotate(BABYLON.Axis.Y, angle, BABYLON.Space.LOCAL);
 
 		//assign material
 		myText.material = header_material;
+		// myText is flashing while rendering
 
-		myText.material.albedoColor = new BABYLON.Color3(1, 1, 1);
-		myText.material.reflectivityColor = new BABYLON.Color3(1, 1, 1);
-		myText.material.specularColor = new BABYLON.Color3(0, 0, 0);
+
 
 	}
 	else {
@@ -197,7 +175,6 @@ var item_builder = function (name, item_position, item_size, vector, material, s
 			item2.rotate(BABYLON.Axis.Y, Math.acos(BABYLON.Vector3.Dot(vector, north_vector)), BABYLON.Space.LOCAL);
 			item2.scaling = new BABYLON.Vector3(item_size.width + margin, item_size.height + margin, item_separation);
 
-
 			//check if the mesh that merges all the frames is already created
 			let existing_frame_object = scene.getMeshByName('frames');
 			if (existing_frame_object) {
@@ -206,10 +183,7 @@ var item_builder = function (name, item_position, item_size, vector, material, s
 			} else {
 				item2.name = "frames";
 			}
-
 		}
-
-
 	}
 	return item
 }
@@ -391,6 +365,7 @@ function rb(config_file, room_name, scene) {
 	for (i = 1; i <= NN; i++) {
 		//place left
 		delta = W / (NN + 1);
+		var name = item_names[j] + j;
 		if (item_names[j].startsWith("d_")) {
 			item_vposition = door_height / 2;
 			scaled_width = door_width;
@@ -399,8 +374,9 @@ function rb(config_file, room_name, scene) {
 			item_vposition = H * config_file["Technical"]["verticalPosition"];
 			scaled_width = item_size * item_width[j];
 			scaled_height = item_size * item_height[j];
+			name = item_names[j] + j+ 'pic';
 		}
-		item = item_builder(item_names[j] + j, { x: -W / 2 + delta * i, y: item_vposition, z: L / 2 - item_separation }, { width: scaled_width, height: scaled_height }, vector_n, items_material[j], scene);
+		item = item_builder(name, { x: -W / 2 + delta * i, y: item_vposition, z: L / 2 - item_separation }, { width: scaled_width, height: scaled_height }, vector_n, items_material[j], scene);
 		j++;
 	}
 
@@ -408,6 +384,7 @@ function rb(config_file, room_name, scene) {
 	for (i = 1; i <= NS; i++) {
 		//place south
 		delta = W / (NS + 1);
+		var name = item_names[j] + j;
 		if (item_names[j].startsWith("d_")) {
 			item_vposition = door_height / 2;
 			scaled_width = door_width;
@@ -416,8 +393,9 @@ function rb(config_file, room_name, scene) {
 			item_vposition = H * config_file["Technical"]["verticalPosition"];
 			scaled_width = item_size * item_width[j];
 			scaled_height = item_size * item_height[j];
+			name = item_names[j] + j+ 'pic';
 		}
-		item = item_builder(item_names[j] + j, { x: -W / 2 + delta * i, y: item_vposition, z: -L / 2 + item_separation }, { width: scaled_width, height: scaled_height }, vector_s, items_material[j], scene);
+		item = item_builder(name, { x: -W / 2 + delta * i, y: item_vposition, z: -L / 2 + item_separation }, { width: scaled_width, height: scaled_height }, vector_s, items_material[j], scene);
 		j++;
 	}
 
@@ -425,6 +403,8 @@ function rb(config_file, room_name, scene) {
 	for (i = 1; i <= NE; i++) {
 		//place east
 		delta = L / (NE + 1);
+		var name = item_names[j] + j;
+
 		if (item_names[j] !== undefined && item_names[j].startsWith("d_")) {
 			item_vposition = door_height / 2;
 			scaled_width = door_width;
@@ -433,14 +413,16 @@ function rb(config_file, room_name, scene) {
 			item_vposition = H * config_file["Technical"]["verticalPosition"];
 			scaled_width = item_size * item_width[j];
 			scaled_height = item_size * item_height[j];
+			name = item_names[j] + j+ 'pic';
 		}
-		item = item_builder(item_names[j] + j, { x: -W / 2 + item_separation, y: item_vposition, z: -L / 2 + delta * i }, { width: scaled_width, height: scaled_height }, vector_e, items_material[j], scene);
+		item = item_builder(name, { x: -W / 2 + item_separation, y: item_vposition, z: -L / 2 + delta * i }, { width: scaled_width, height: scaled_height }, vector_e, items_material[j], scene);
 		j++;
 	}
 	//west
 	for (i = 1; i <= NW; i++) {
 		//place west
 		delta = L / (NW + 1);
+		var name = item_names[j] + j;
 		if (item_names[j] !== undefined && item_names[j].startsWith("d_")) {
 			item_vposition = door_height / 2;
 			scaled_width = door_width;
@@ -449,12 +431,12 @@ function rb(config_file, room_name, scene) {
 			item_vposition = H * config_file["Technical"]["verticalPosition"];
 			scaled_width = item_size * item_width[j];
 			scaled_height = item_size * item_height[j];
+			name = item_names[j] + j+ 'pic';
 		}
-		item = item_builder(item_names[j] + j, { x: W / 2 - item_separation, y: item_vposition, z: -L / 2 + delta * i }, { width: scaled_width, height: scaled_height }, vector_w, items_material[j], scene);
+		item = item_builder(name, { x: W / 2 - item_separation, y: item_vposition, z: -L / 2 + delta * i }, { width: scaled_width, height: scaled_height }, vector_w, items_material[j], scene);
 		j++;
 	}
 
 	//adjust uvscale
 	auto_uv_scale(room_name);
 }
-
