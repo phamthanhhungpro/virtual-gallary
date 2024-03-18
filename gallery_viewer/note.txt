@@ -1,0 +1,17 @@
+		var crossProduct = BABYLON.Vector3.Cross(north_vector, vector);
+		// Calculate the dot product and use it to find the angle between vectors
+		let dotProduct = BABYLON.Vector3.Dot(north_vector, vector);
+		let angle = Math.acos(dotProduct);
+
+		// Adjust the angle based on the direction of the cross product
+		if (crossProduct.y < 0) {
+			angle = -angle;
+		}
+		angle += Math.PI / 2;
+		doorMesh.rotate(BABYLON.Axis.Y, angle, BABYLON.Space.LOCAL);
+
+		// rotate Z 90 degrees
+		//doorMesh.rotate(BABYLON.Axis.X, Math.PI, BABYLON.Space.LOCAL);
+
+		// move it up 
+		//doorMesh.position.y += 2.5;

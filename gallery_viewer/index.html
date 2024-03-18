@@ -3,145 +3,19 @@
 
 <head>
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-	<title>My Artworks</title>
-
-	<style>
-		html,
-		body {
-			overflow: hidden;
-			width: 100%;
-			height: 100%;
-			margin: 0;
-			padding: 0;
-		}
-
-		#renderCanvas {
-			width: 100%;
-			height: 100%;
-			touch-action: none;
-		}
-
-		#loader {
-			width: 100%;
-			height: 100%;
-			background: slategrey;
-			margin: auto;
-			display: flex;
-			flex-direction: column;
-			justify-content: center;
-			align-items: center;
-			font-size: 30px;
-			font-family: Arial, Helvetica, sans-serif;
-
-		}
-
-		#loaded {
-			opacity: 0;
-			transition: opacity 1s ease;
-		}
-
-		#loadingContainer {
-			width: 30%;
-			height: 2rem;
-			background: rgba(255, 255, 255, 0.75);
-			border-radius: 6px;
-			margin: 0.5rem;
-		}
-
-		#loadingBar {
-			height: 100%;
-			background: green;
-			border-radius: 6px;
-			width: 0%;
-		}
-
-		#infoBox {
-			background-color: rgba(0, 0, 0, 0.7);
-			color: white;
-			font-family: 'Arial', sans-serif;
-			font-size: 24px;
-			padding: 20px;
-			position: fixed;
-			bottom: 10px;
-			left: 50%;
-			transform: translateX(-50%);
-			max-width: 600px;
-			border-radius: 10px;
-		}
-
-
-
-		#artTitle {
-			margin: 0;
-			/* Remove default margins */
-		}
-
-		#overlay {
-			display: none;
-			/* Initially hidden */
-			position: fixed;
-			top: 0;
-			left: 0;
-			width: 100%;
-			height: 100%;
-			background-color: rgba(0, 0, 0, 0.7);
-			/* Semi-transparent black */
-			z-index: 10;
-			/* Ensure it's above other elements */
-			display: none;
-			flex-direction: column;
-			/* Stack children vertically */
-			justify-content: flex-end;
-			/* Align children to the bottom */
-		}
-
-		#imageContainer {
-			display: flex;
-			justify-content: center;
-			/* Center items horizontally */
-			align-items: center;
-			/* Center items vertically */
-			width: 100%;
-			/* Full width */
-			height: 30%;
-			position: absolute;
-			bottom: 0;
-			padding: 10px;
-			/* Padding at the bottom */
-		}
-
-		@keyframes pulse {
-			0% {
-				transform: scale(1);
-			}
-
-			50% {
-				transform: scale(1.05);
-			}
-
-			100% {
-				transform: scale(1);
-			}
-		}
-
-		.instruction-image {
-			max-width: 40%;
-			/* Limit width to 40% of screen width */
-			max-height: 100%;
-			/* Ensures the image doesn't exceed container's height */
-			height: auto;
-			/* Maintain aspect ratio */
-			margin: 0 10px;
-			/* Add space between images */
-			animation: pulse 0.5s infinite ease-in-out;
-		}
-	</style>
-
+	<title>The Gallary</title>
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+	<!-- Bootstrap Icons CSS (optional) -->
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+	<!-- add app.css here -->
+	<link href="app.css" rel="stylesheet">
 	<script src="https://cdn.babylonjs.com/babylon.js"></script>
 	<script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
 	<script src="https://code.jquery.com/pep/0.4.3/pep.js"></script>
 
 	<script src="https://unpkg.com/earcut@2.1.1/dist/earcut.min.js"></script>
+	<link rel="icon" type="image/x-icon" href="../favicon.ico">
+
 </head>
 
 <body>
@@ -154,24 +28,38 @@
 	</div>
 
 
+	<div class="container">
+		<span class="loader" id="loader"></span>
+	</div>
 
-
-	<div id="loader">
+	<!-- <div id="loader">
 		<p>Loading gallery</p>
 		<div id="loadingContainer">
 			<div id="loadingBar"></div>
 		</div>
 		<p id="percentLoaded">0%</p>
+	</div> -->
+
+	<div class="container detail-mode" id="detailsBox" style="display: none;">
+		<span class="icon close-icon float-end" onclick="hideDetailBox()">
+			<i class="bi bi-x-lg"></i>
+		</span>
+
+		<div id="detailsContent" class="p-3">
+			<h6 id="artTitle"></h6>
+		</div>
+		<!-- add next and previos button -->
+		<div id="detailsButtons">
+			<span class="icon previous-icon" onclick="preArt()">
+				<i class="bi bi-arrow-left"></i>
+			</span>
+			<span class="icon next-icon" onclick="nextArt()">
+				<i class="bi bi-arrow-right"></i>
+			</span>
+		</div>
 	</div>
-
-	<div id="infoBox" style="display: none;">
-		<p id="artTitle"></p>
-	</div>
-
-
 
 	<canvas id="renderCanvas" touch-action="none"></canvas>
-	<!-- touch-action="none" for best results from PEP -->
 
 	<script>
 		// user custom variables that you need to modify
@@ -204,10 +92,9 @@
 		const regul_exp_tail = /_[0-9]*$/;
 		const regul_exp_artworks = /.*pic$/;
 
-
-
 		//declarations
 		var canvas = document.getElementById("renderCanvas");
+
 		var sceneToRender = null;
 		let config_file_content;
 		let style_file_content;
@@ -219,6 +106,9 @@
 
 		//device detections
 		var isTouchDevice = false;
+
+		// index of selection art
+		var index = 0;
 
 		if (('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || (navigator.msMaxTouchPoints > 0)) {
 			isTouchDevice = true;
@@ -272,8 +162,6 @@
 
 					});
 			})
-
-
 		}
 
 
@@ -282,7 +170,6 @@
 			document.getElementById("artTitle").innerText = title;
 			document.getElementById("infoBox").style.display = "block";
 		}
-
 
 		function reposition_lights(room_name) {
 			let L = config_file_content[room_name]["geometry"][1];
@@ -448,7 +335,7 @@
 
 
 				//the current gallery is updated with the user choice
-				current_gallery = evt.source.id;
+				current_gallery = evt.source.name ?? evt.source.id;
 				current_gallery = current_gallery.replace(regul_exp_tail, "");
 
 
@@ -457,38 +344,14 @@
 
 				//the new gallery assets are loaded unless they are already in memory
 				if (galleries[current_gallery] == undefined) {
-					//check if glb file exists
-					if (doesFileExist(asset_location + current_gallery_file + ".glb")) {
-						console.log("Loading glb for gallery " + current_gallery_file);
-						let temp_assetcontainer = await loadAsset(current_gallery_file + ".glb", scene);
-						temp_assetcontainer.addAllToScene();
-					} else {
-						//template to fill in
-						if (doesFileExist(asset_location + "t_" + current_gallery_file + ".glb")) {
-							console.log("loading template");
-							let temp_assetcontainer = await loadAsset("t_" + current_gallery_file + ".glb", scene);
-							temp_assetcontainer.addAllToScene();
-							populate_template(config_file_content, current_gallery_file, scene);
-							console.log("template populated");
-
-							//on the fly hall	
-						} else {
-							console.log("Building from scratch " + current_gallery_file);
-							rb(config_file_content, current_gallery_file, scene);
-							//remove the loading bar if visible
-							if (document.getElementById("loader") != undefined) {
-								document.getElementById("loader").style.display = "none";
-								document.getElementById("loader").id = "loaded";
-							}
-						}
+					await rb(config_file_content, current_gallery_file, scene);
+					//remove the loading bar if visible
+					if (document.getElementById("loader") != undefined) {
+						document.getElementById("loader").style.display = "none";
+						document.getElementById("loader").id = "loaded";
 					}
-
 					//reposition lights
 					reposition_lights(current_gallery_file);
-
-
-
-					//});
 
 				} else {
 					galleries[current_gallery]._wasAddedToScene = false;
@@ -513,48 +376,42 @@
 					}
 				});
 
-				for (const door of gallery_doors) {
+				for (const door of gallery_doors){
 					scene.getMeshByName(door).actionManager = new BABYLON.ActionManager();
 					scene.getMeshByName(door).actionManager.registerAction(new BABYLON.ExecuteCodeAction(
-						BABYLON.ActionManager.OnPickTrigger, galleryManager));
+									BABYLON.ActionManager.OnPickTrigger, galleryManager	));
 				}
 
+				// add event listener for click door
+				// canvas.addEventListener("click", function (evt) {
+				// 	var pickResult = scene.pick(scene.pointerX, scene.pointerY);
+				// 	if (pickResult.hit) {
+				// 		var mesh = pickResult.pickedMesh;
+				// 		console.log("Door clicked", mesh.name);
+
+				// 		if (mesh.name.includes("mesh")) {
+
+				// 			galleryManager(evt);
+				// 		}
+				// 	}
+				// });
+
 				for (const artwork of gallery_artworks) {
-					console.log('action manager de ' + artwork);
 
-					scene.getMeshByName(artwork).actionManager = new BABYLON.ActionManager();
-					scene.getMeshByName(artwork).actionManager.registerAction(
-						new BABYLON.ExecuteCodeAction(
-							{ trigger: BABYLON.ActionManager.OnPointerOverTrigger },
-							function () {
-								showInfoBox("Title:  " + artwork);
-							}
-
-						));
-					scene.getMeshByName(artwork).actionManager.registerAction(
-						new BABYLON.ExecuteCodeAction(
-							{ trigger: BABYLON.ActionManager.OnPointerOutTrigger },
-							function () {
-								document.getElementById("infoBox").style.display = "none";
-							}
-						));
+					var mesh = scene.getMeshByName(artwork);
+					mesh.actionManager = new BABYLON.ActionManager();
 					// camera focus on the mesh by clicking
-					scene.getMeshByName(artwork).actionManager.registerAction(
+					mesh.actionManager.registerAction(
 						new BABYLON.ExecuteCodeAction(
 							{ trigger: BABYLON.ActionManager.OnPickTrigger },
-							function () {
-								// move the camera to the mesh position with a smooth transition
-								let targetPosition = scene.getMeshByName(artwork).position.clone(); // Get the target position
-								// Make the camera look at the target
-								scene.cameras[0].setTarget(targetPosition);
-								// Calculate a new position in front of the target
-								let direction = scene.cameras[0].position.subtract(targetPosition).normalize(); // Get the direction from the camera to the target
+							function (event) {
+								// get the index of the artwork
+								index = gallery_artworks.indexOf(artwork);
 
-								let newPosition = targetPosition.add(direction.scale(5));
+								zoom(scene.cameras[0], scene.getMeshByName(artwork));
 
-								// Create and start the animation
-								BABYLON.Animation.CreateAndStartAnimation("cameraZoomAnimation", scene.cameras[0], "position", 30, 40, scene.cameras[0].position, newPosition, 0);
-
+								// show a box with the content of the artwork
+								showDetailBox(artwork);
 							}
 						));
 
@@ -609,7 +466,63 @@
 		initFunction().then(() => { sceneToRender = scene });
 
 
+		var zoom = function (cam, tar) {
+			console.log("zooming");
+			var targetEndPos = tar.getAbsolutePosition();
+			var camEndPos = tar.getAbsolutePosition();
+			var speed = 45;
+			var ease = new BABYLON.CubicEase();
 
+			tar.computeWorldMatrix();
+			var matrix = tar.getWorldMatrix(true);
+			var local_position = new BABYLON.Vector3(0, 0, 0);
+			local_position.addInPlace(new BABYLON.Vector3(0, 0, -5));
+			var global_position = BABYLON.Vector3.TransformCoordinates(local_position, matrix);
+
+			ease.setEasingMode(BABYLON.EasingFunction.EASINGMODE_EASEINOUT);
+			BABYLON.Animation.CreateAndStartAnimation('at4', cam, 'position', speed, 120, cam.position, global_position, 0, ease);
+			BABYLON.Animation.CreateAndStartAnimation('at5', cam, 'target', speed, 120, cam.target, targetEndPos, 0, ease);
+		};
+
+		function showDetailBox(title) {
+			title = title.split("_")[0];
+			document.getElementById("artTitle").innerText = title;
+			document.getElementById("detailsBox").style.display = "block";
+		}
+
+		function hideDetailBox() {
+			document.getElementById("detailsBox").style.display = "none";
+		}
+
+		function preArt() {
+			if (index == 0) {
+				index = gallery_artworks.length;
+			}
+			index -= 1;
+			zoom(scene.cameras[0], scene.getMeshByName(gallery_artworks[index]));
+		}
+
+		function nextArt() {
+			if (index == gallery_artworks.length - 1) {
+				index = -1;
+			}
+			index += 1;
+			zoom(scene.cameras[0], scene.getMeshByName(gallery_artworks[index]));
+		}
+
+		// listen event click a mesh
+		// canvas.addEventListener("click", function (evt) {
+		// 	var pickResult = scene.pick(scene.pointerX, scene.pointerY);
+		// 	if (pickResult.hit) {
+		// 		var mesh = pickResult.pickedMesh;
+		// 		if (mesh.name.includes("mesh")) {
+		// 			mesh.actionManager = new BABYLON.ActionManager();
+		// 			mesh.actionManager.registerAction(new BABYLON.ExecuteCodeAction(
+		// 				BABYLON.ActionManager.OnPickTrigger, galleryManager));
+		// 		}
+
+		// 	}
+		// });
 
 
 	</script>
